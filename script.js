@@ -5,9 +5,8 @@ const form = document.getElementById('cadastroForm');
 const submitBtn = document.getElementById('submitBtn');
 const successMessage = document.getElementById('successMessage');
 
-const params = new URLSearchParams(window.location.search);
-const vendedor = params.get('vendedor') || 'Vendedor';
-const telefoneVendedor = params.get('fone') || '';
+const vendedor = document.body.dataset.vendedor;
+const telefoneVendedor = document.body.dataset.fone;
 
 let isSubmitting = false;
 
@@ -20,152 +19,128 @@ const outroField = document.getElementById('outroField');
 const isento = document.getElementById('isento');
 const ie = document.getElementById('ie');
 
-atividade.addEventListener('change', () => {
-  outroField.classList.toggle('hidden', atividade.value !== 'Outro');
+atividade.addEventListener('change',()=>{
+  outroField.classList.toggle('hidden',atividade.value!=='Outro');
 });
 
-isento.addEventListener('change', () => {
-  ie.disabled = isento.checked;
-  if (isento.checked) {
-    ie.value = 'ISENTO';
-  } else {
-    ie.value = '';
-  }
+isento.addEventListener('change',()=>{
+  ie.disabled=isento.checked;
+  ie.value=isento.checked?'ISENTO':'';
 });
 
-function onlyNumbers(value) {
-  return value.replace(/\D/g, '');
+function onlyNumbers(v){return v.replace(/\D/g,'');}
+
+function formatCpfCnpj(v){
+ v=onlyNumbers(v);
+ if(v.length<=11){
+  v=v.replace(/(\d{3})(\d)/,'$1.$2');
+  v=v.replace(/(\d{3})(\d)/,'$1.$2');
+  v=v.replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+ }else{
+  v=v.replace(/^(\d{2})(\d)/,'$1.$2');
+  v=v.replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3');
+  v=v.replace(/\.(\d{3})(\d)/,'.$1/$2');
+  v=v.replace(/(\d{4})(\d)/,'$1-$2');
+ }
+ return v;
 }
 
-function formatCpfCnpj(value) {
-  value = onlyNumbers(value);
+cpfCnpj.addEventListener('input',e=>{
+ e.target.value=formatCpfCnpj(e.target.value);
+});
 
-  if (value.length <= 11) {
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-  } else {
-    value = value.replace(/^(\d{2})(\d)/, '$1.$2');
-    value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-    value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
-    value = value.replace(/(\d{4})(\d)/, '$1-$2');
-  }
-
-  return value;
+function formatPhone(v){
+ v=onlyNumbers(v);
+ v=v.replace(/^(\d{2})(\d)/g,'($1) $2');
+ v=v.replace(/(\d{5})(\d)/,'$1-$2');
+ return v;
 }
 
-cpfCnpj.addEventListener('input', (e) => {
-  e.target.value = formatCpfCnpj(e.target.value);
+telefone1.addEventListener('input',e=>{
+ e.target.value=formatPhone(e.target.value);
 });
 
-function formatPhone(value) {
-  value = onlyNumbers(value);
-  value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
-  value = value.replace(/(\d{5})(\d)/, '$1-$2');
-  return value;
-}
-
-telefone1.addEventListener('input', (e) => {
-  e.target.value = formatPhone(e.target.value);
+telefone2.addEventListener('input',e=>{
+ e.target.value=formatPhone(e.target.value);
 });
 
-telefone2.addEventListener('input', (e) => {
-  e.target.value = formatPhone(e.target.value);
+cep.addEventListener('input',e=>{
+ let v=onlyNumbers(e.target.value);
+ v=v.replace(/(\d{5})(\d)/,'$1-$2');
+ e.target.value=v;
 });
 
-cep.addEventListener('input', (e) => {
-  let value = onlyNumbers(e.target.value);
-  value = value.replace(/(\d{5})(\d)/, '$1-$2');
-  e.target.value = value;
+cep.addEventListener('blur',async()=>{
+ const cepValue=onlyNumbers(cep.value);
+ if(cepValue.length!==8)return;
+
+ document.getElementById('cepStatus').innerText='Buscando endereço...';
+
+ try{
+   const response=await fetch(`https://viacep.com.br/ws/${cepValue}/json/`);
+   const data=await response.json();
+
+   if(data.erro){
+     document.getElementById('cepStatus').innerText='CEP inválido';
+     return;
+   }
+
+   document.getElementById('rua').value=data.logradouro||'';
+   document.getElementById('bairro').value=data.bairro||'';
+   document.getElementById('cidade').value=data.localidade||'';
+   document.getElementById('estado').value=data.uf||'';
+   document.getElementById('cepStatus').innerText='';
+ }catch{
+   document.getElementById('cepStatus').innerText='Erro ao consultar CEP';
+ }
 });
 
-cep.addEventListener('blur', async () => {
-  const cepValue = onlyNumbers(cep.value);
+form.addEventListener('submit',async(e)=>{
+ e.preventDefault();
 
-  if (cepValue.length !== 8) return;
+ if(isSubmitting)return;
 
-  document.getElementById('cepStatus').innerText = 'Buscando endereço...';
+ isSubmitting=true;
+ submitBtn.disabled=true;
+ submitBtn.innerText='ENVIANDO...';
 
-  try {
-    const response = await fetch(`https://viacep.com.br/ws/${cepValue}/json/`);
-    const data = await response.json();
+ const now=new Date();
 
-    if (data.erro) {
-      document.getElementById('cepStatus').innerText = 'CEP inválido';
-      return;
-    }
+ const payload={
+   DataHora:now.toLocaleString('pt-BR'),
+   Vendedor:vendedor,
+   CPFCNPJ:cpfCnpj.value,
+   RazaoSocial:document.getElementById('razaoSocial').value,
+   NomeFantasia:document.getElementById('nomeFantasia').value,
+   InscricaoEstadual:ie.value,
+   CEP:cep.value,
+   Rua:document.getElementById('rua').value,
+   Numero:document.getElementById('numero').value,
+   Complemento:document.getElementById('complemento').value,
+   Bairro:document.getElementById('bairro').value,
+   Cidade:document.getElementById('cidade').value,
+   Estado:document.getElementById('estado').value,
+   Telefone1:telefone1.value,
+   Telefone2:telefone2.value,
+   NomeContato:document.getElementById('nomeContato').value,
+   Email:document.getElementById('email').value,
+   TipoAtividade:atividade.value==='Outro'?document.getElementById('atividadeOutro').value:atividade.value,
+   DataInicioEmpresa:document.getElementById('dataInicio').value,
+   HorarioRecebimento:document.getElementById('horarioRecebimento').value
+ };
 
-    document.getElementById('rua').value = data.logradouro || '';
-    document.getElementById('bairro').value = data.bairro || '';
-    document.getElementById('cidade').value = data.localidade || '';
-    document.getElementById('estado').value = data.uf || '';
+ try{
 
-    document.getElementById('cepStatus').innerText = '';
-  } catch {
-    document.getElementById('cepStatus').innerText = 'Erro ao consultar CEP';
-  }
-});
+   if(APPS_SCRIPT_URL!=='COLE_AQUI_URL_APPS_SCRIPT'){
+     await fetch(APPS_SCRIPT_URL,{
+       method:'POST',
+       mode:'no-cors',
+       headers:{'Content-Type':'application/json'},
+       body:JSON.stringify(payload)
+     });
+   }
 
-function validateEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  if (isSubmitting) return;
-
-  const email = document.getElementById('email').value.trim();
-
-  if (!validateEmail(email)) {
-    alert('Digite um e-mail válido.');
-    return;
-  }
-
-  isSubmitting = true;
-  submitBtn.disabled = true;
-  submitBtn.innerText = 'ENVIANDO...';
-
-  const now = new Date();
-
-  const payload = {
-    DataHora: now.toLocaleString('pt-BR'),
-    Vendedor: vendedor,
-    TelefoneVendedor: telefoneVendedor,
-    CPFCNPJ: cpfCnpj.value.trim(),
-    RazaoSocial: document.getElementById('razaoSocial').value.trim(),
-    NomeFantasia: document.getElementById('nomeFantasia').value.trim(),
-    InscricaoEstadual: ie.value.trim(),
-    CEP: cep.value.trim(),
-    Rua: document.getElementById('rua').value.trim(),
-    Numero: document.getElementById('numero').value.trim(),
-    Complemento: document.getElementById('complemento').value.trim(),
-    Bairro: document.getElementById('bairro').value.trim(),
-    Cidade: document.getElementById('cidade').value.trim(),
-    Estado: document.getElementById('estado').value.trim(),
-    Telefone1: telefone1.value.trim(),
-    Telefone2: telefone2.value.trim(),
-    NomeContato: document.getElementById('nomeContato').value.trim(),
-    Email: email,
-    TipoAtividade: atividade.value === 'Outro'
-      ? document.getElementById('atividadeOutro').value.trim()
-      : atividade.value,
-    DataInicioEmpresa: document.getElementById('dataInicio').value
-  };
-
-  try {
-    if (APPS_SCRIPT_URL !== 'COLE_AQUI_URL_APPS_SCRIPT') {
-      await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-    }
-
-    const mensagem = `📋 *NOVO CADASTRO DE CLIENTE – FBF*
+   const mensagem=`📋 *NOVO CADASTRO DE CLIENTE – FBF*
 
 👤 *Nome Contato:* ${payload.NomeContato}
 
@@ -173,43 +148,26 @@ form.addEventListener('submit', async (e) => {
 🏷 *Nome Fantasia:* ${payload.NomeFantasia}
 
 📄 *CPF/CNPJ:* ${payload.CPFCNPJ}
-🧾 *Inscrição Estadual:* ${payload.InscricaoEstadual}
 
-📍 *Endereço:*
-${payload.Rua}, ${payload.Numero}
-${payload.Bairro} - ${payload.Cidade}/${payload.Estado}
-CEP: ${payload.CEP}
-
-📞 *Telefone 1:* ${payload.Telefone1}
-📞 *Telefone 2:* ${payload.Telefone2}
-
-📧 *E-mail:* ${payload.Email}
-
-🍔 *Tipo de Atividade:* ${payload.TipoAtividade}
-
-📅 *Início Empresa:* ${payload.DataInicioEmpresa}
+📞 *Telefone:* ${payload.Telefone1}
 
 👨‍💼 *Vendedor:* ${payload.Vendedor}
 
-⏰ Cadastro enviado em:
-${payload.DataHora}`;
+⏰ ${payload.DataHora}`;
 
-    successMessage.innerHTML = `
-      Cadastro enviado com sucesso para ${vendedor}<br>
-      ${payload.DataHora}
-    `;
+   successMessage.innerHTML=`Cadastro enviado com sucesso para ${vendedor}<br>${payload.DataHora}`;
 
-    form.reset();
+   form.reset();
 
-    setTimeout(() => {
-      window.location.href = `https://wa.me/${telefoneVendedor}?text=${encodeURIComponent(mensagem)}`;
-    }, 1200);
+   setTimeout(()=>{
+     window.location.href=`https://wa.me/${telefoneVendedor}?text=${encodeURIComponent(mensagem)}`;
+   },1000);
 
-  } catch (error) {
-    alert('Erro ao enviar cadastro. Tente novamente.');
-  } finally {
-    isSubmitting = false;
-    submitBtn.disabled = false;
-    submitBtn.innerText = 'Enviar Cadastro';
-  }
+ }catch{
+   alert('Erro ao enviar cadastro.');
+ }
+
+ isSubmitting=false;
+ submitBtn.disabled=false;
+ submitBtn.innerText='Enviar Cadastro';
 });
