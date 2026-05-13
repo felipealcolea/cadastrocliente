@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b4ea2" />
+  <title>Cadastro de Clientes FBF</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Cadastro de Clientes FBF</h1>
+      <p>Preencha os dados abaixo para concluir seu cadastro.</p>
+    </header>
+
+    <form id="cadastroForm" novalidate>
+      <div class="field">
+        <label for="cpfCnpj">CPF ou CNPJ *</label>
+        <input type="text" id="cpfCnpj" inputmode="numeric" required />
+        <small class="error"></small>
+      </div>
+
+      <div class="field">
+        <label for="razaoSocial">Razão Social *</label>
+        <input type="text" id="razaoSocial" required />
+        <small class="error"></small>
+      </div>
+
+      <div class="field">
+        <label for="nomeFantasia">Nome Fantasia *</label>
+        <input type="text" id="nomeFantasia" required />
+        <small class="error"></small>
+      </div>
+
+      <div class="field">
+        <label for="ie">Inscrição Estadual</label>
+        <div class="inline">
+          <input type="text" id="ie" />
+          <label class="checkbox">
+            <input type="checkbox" id="isento" />
+            ISENTO
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cep">CEP *</label>
+        <input type="text" id="cep" inputmode="numeric" required />
+        <small id="cepStatus"></small>
+      </div>
+
+      <div class="field">
+        <label for="rua">Rua</label>
+        <input type="text" id="rua" readonly />
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="numero">Número *</label>
+          <input type="text" id="numero" required />
+        </div>
+
+        <div class="field">
+          <label for="complemento">Complemento</label>
+          <input type="text" id="complemento" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="bairro">Bairro</label>
+        <input type="text" id="bairro" readonly />
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="cidade">Cidade</label>
+          <input type="text" id="cidade" readonly />
+        </div>
+
+        <div class="field">
+          <label for="estado">Estado</label>
+          <input type="text" id="estado" readonly />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="telefone1">Telefone *</label>
+        <input type="tel" id="telefone1" inputmode="tel" required />
+      </div>
+
+      <div class="field">
+        <label for="telefone2">Telefone 2</label>
+        <input type="tel" id="telefone2" inputmode="tel" />
+      </div>
+
+      <div class="field">
+        <label for="nomeContato">Nome Contato *</label>
+        <input type="text" id="nomeContato" required />
+      </div>
+
+      <div class="field">
+        <label for="email">E-mail *</label>
+        <input type="email" id="email" inputmode="email" required />
+      </div>
+
+      <div class="field">
+        <label for="atividade">Tipo de Atividade *</label>
+        <select id="atividade" required>
+          <option value="">Selecione</option>
+          <option>Restaurante</option>
+          <option>Padaria</option>
+          <option>Açougue</option>
+          <option>Lanchonete</option>
+          <option>Mercado</option>
+          <option>Conveniência</option>
+          <option>Distribuidora</option>
+          <option>Doceria</option>
+          <option>Sorveteria</option>
+          <option>Pizzaria</option>
+          <option>Outro</option>
+        </select>
+      </div>
+
+      <div class="field hidden" id="outroField">
+        <label for="atividadeOutro">Qual atividade?</label>
+        <input type="text" id="atividadeOutro" />
+      </div>
+
+      <div class="field">
+        <label for="dataInicio">Data Início Empresa</label>
+        <input type="date" id="dataInicio" />
+      </div>
+
+      <button type="submit" id="submitBtn">Enviar Cadastro</button>
+
+      <div id="successMessage"></div>
+    </form>
+
+    <footer>
+      <a href="https://fbfdistribuidora.com.br/" target="_blank">Site Oficial FBF</a>
+      <a href="https://g.page/r/CUGeLcQViUp1EBM/review" target="_blank">Avaliar no Google</a>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
